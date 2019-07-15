@@ -5,7 +5,7 @@
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-DynamicJsonDocument command(1024);
+DynamicJsonDocument command(128);
 String commandStr;
 
 #define POOF_SLIDER A0
