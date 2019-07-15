@@ -1,8 +1,6 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include <string>
-using std::string;
 #include "wifi_credentials.h"
 
 WiFiClient espClient;
