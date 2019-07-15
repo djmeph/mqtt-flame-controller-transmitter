@@ -1,9 +1,14 @@
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <string>
+using std::string;
 #include "wifi_credentials.h"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+DynamicJsonDocument command(1024);
+String commandStr;
 
 #define POOF_SLIDER A0
 #define POOF_INPUT D1
@@ -33,7 +38,7 @@ void connectMqtt() {
     if (client.connect(mqtt_clientId)) {
       digitalWrite(MQTT_LED, HIGH);
       Serial.println("connected");
-      // client.subscribe("ledStatus");
+      // client.subscribe(mqtt_topic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -69,8 +74,14 @@ void button() {
     button_state_last = button_state;
     debounce = millis();
     if (button_state == LOW) {
-      Serial.printf("Poof! %u\n", analogRead(POOF_SLIDER));
-      client.publish(mqtt_topic, "Poof!");
+      command["delay"] = map(analogRead(POOF_SLIDER), 1, 1024, 200, 2000);
+      serializeJson(command, commandStr);
+      Serial.println(commandStr);
+      int commandStrLen = commandStr.length() + 1;
+      char commandStrArr[commandStrLen];
+      commandStr.toCharArray(commandStrArr, commandStrLen);
+      client.publish(mqtt_topic, commandStrArr);
+      commandStr = "";
     }
   }
 }
@@ -82,8 +93,10 @@ void setup() {
   pinMode(POOF_SLIDER, INPUT);
   pinMode(WIFI_LED, OUTPUT);
   pinMode(MQTT_LED, OUTPUT);
-  client.setServer(mqtt_server, 1883);
+  client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  command["cmd"] = "poof";
+  command["delay"] = 0;
 }
 
 void loop() {
@@ -91,7 +104,6 @@ void loop() {
     setupWifi();
   }
   if (!client.connected()) {
-    Serial.printf("Client connected: %s\n", client.connected() ? "TRUE" : "FALSE");
     connectMqtt();
   }
   client.loop();
