@@ -19,14 +19,8 @@ int debounce = 0;
 const int debounce_time = 10;
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i=0;i<length;i++) {
-    char receivedChar = (char)payload[i];
-    Serial.print(receivedChar);
-  }
-  Serial.println();
+  String command = String((char*)payload);
+  Serial.printf("Message arrived [%s] %s\n", topic, command);
 }
 
 void connectMqtt() {
